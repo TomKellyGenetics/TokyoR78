@@ -1,0 +1,424 @@
+---
+title: "Making your code faster: Introduction to vectorisation and parallel computing"
+author: "Tom Kelly"
+date: "5/25/2019"
+output: html_document
+---
+
+## Analysis of Gapminder Data
+
+We will use the [Gapminder dataset](https://www.gapminder.org/data/) for demonstrations. This has data about 142 countries/regions around the world, every 5 years from 1952 to 2007. We will download this data from the Software Carpentry lesson materials on GitHub.
+
+```{r}
+# input data
+
+system("wget raw.githubusercontent.com/swcarpentry/r-novice-gapminder/master/data/gapminder_data.csv")
+gapminder_data <- data.table::fread("gapminder_data.csv", data.table = FALSE)
+dim(gapminder_data)
+head(gapminder_data)
+```
+
+## Basic Computational tasks
+
+Let's start with a basic task (that we want to do many times). For example, let's compute the average life expectancy for Asia in 2002.
+
+```{r}
+mean(gapminder_data[gapminder_data$continent == "Asia" & gapminder_data$year == "2002",]$lifeExp)
+```
+
+Now suppose that we want to do this again. Let's do it again for each continent: why not copy-paste?
+**Do not do this**. You will introduce human errors into your code, it is tedious to write and difficult to fix and run again. If you find a problem, you need to correct every instance where that problem occurs.
+
+```{r}
+mean(gapminder_data[gapminder_data$continent == "Asia" & gapminder_data$year == "2002",]$lifeExp)
+mean(gapminder_data[gapminder_data$continent == "Africa" & gapminder_data$year == "2002",]$lifeExp)
+mean(gapminder_data[gapminder_data$continent == "Europe" & gapminder_data$year == "2002",]$lifeExp)
+mean(gapminder_data[gapminder_data$continent == "Australasia" & gapminder_data$year == "2002",]$lifeExp)
+mean(gapminder_data[gapminder_data$continent == "Americas" & gapminder_data$year == "2002",]$lifeExp)
+```
+
+Note that it is easy to make mistakes here. These inputs do not match the Continents in the dataset.
+
+```{R}
+table(gapminder_data$continent)
+```
+
+
+## Doing Repetitive Tasks
+
+You can compute repetitive tasks to make sure they are treated the same. This has several benefits:
+
+- takes less time to write the code
+- reduces human errors when one line has a mistake
+- easy to change and run same process on many inputs again (if all lines have a mistake)
+- sometimes runs faster (vectorised or parallel)
+- you specify all input conditions at the beginning (lees likely you will miss one)
+
+There are serveral ways to do this:
+
+- vectorised functions (for simple scalar operations)
+- create your own function (to run with many **different** inputs and to **share** tools as packages)
+- apply a function (to list or matrix data)
+- run processes iteratively in a LOOP (sequential)
+- run multiple threads or processes in **parallel** on different COREs or threads (cpu or gpu).
+
+### Vectorised commands
+
+Some commands in R have built-in vectorised operations. They can take input as either a scalar (one element) or a vector (many elements). This is the simplest way to perform multiple operations at the same time. They run sequentially but results are returned simultaneously as a vector. This is ideal for basic operations.
+
+For example, we can square each number as scalar:
+
+```{r}
+#scalar operation
+1^2
+2^2
+3^2
+```
+
+This operation is takes a vector input and returns a vector of the same length. The same operation is performed on each element separately. These operations only apply to each element alone and _cannot_ take outputs from other elements as the input (in a single operation). 
+
+vectorisation: _perform an operation for EACH element in a VECTOR_
+
+
+```{r]}
+#vector operation
+c(1:3)^2
+c(1:10)^2
+```
+
+### FOR Loop
+
+For more complex operations we can use a for loop to run the same operation on each element in the inputs. Each input is substituted into the loop sequentially. These operations occur in _order_ and can depend on the output of previous operations.
+
+For example,if we doing something (generally more complex) with exactly the same for many arguments: we use a FOR Loop.
+
+Loop: _FOR EACH element IN inputs DO operation_
+
+```{r}
+print(paste0(1, "^2 = ", 1^2))
+for(ii in 1:4){
+  print(paste0(ii, "^2 = ", ii^2))
+}
+```
+
+So we can compute the mean Life Expectancy for each possible continent as follows:
+
+```{r}
+for(continent in unique(gapminder_data$continent)){
+  print(
+  mean(gapminder_data[gapminder_data$continent == continent & gapminder_data$year == "2002",]$lifeExp)
+  )
+}
+```
+It is [recommended](https://www.r-bloggers.com/growing-objects-and-loop-memory-pre-allocation/) to initialise an object of the right size (to "pre-allocate" memory) to add the sequential outputs to this output. Replacing the object with a larger object (appending) is not efficient for memory in R, especially for large operations or data. _Do not use c() or cbind() in a for loop_.
+
+```{r}
+mean_by_cont <- rep(NA, length(unique(gapminder_data$continent)))
+for(continent in unique(gapminder_data$continent)){
+  ii <- match(continent, unique(gapminder_data$continent))
+  mean_by_cont[ii] <- mean(gapminder_data[gapminder_data$continent == continent & gapminder_data$year == "2002",]$lifeExp)
+}
+names(mean_by_cont) <- unique(gapminder_data$continent)
+mean_by_cont 
+```
+
+For loops are very flexible and can do almost any operation (although complex loops can take a _long_ time to run). They can be re-written (optimised or refactored) to run more efficiently. So they are a good _starting point_ to develop code and get fast results (without spending more time of your own). You can put a for loop inside another for loop to do more complex operatons. For example, this is a _nested for loop_ to take two different arguments and compute mean for each _continent_ for each _year_. This generates a separate mean for each element of a (2-dimensional) matrix.
+
+
+```{r}
+# doing something for different arguments: nested FOR Loop (can get messy)
+mean_by_cont <- matrix(NA, length(unique(gapminder_data$year)), length(unique(gapminder_data$continent)))
+for(continent in unique(gapminder_data$continent)){ # for every continent (as columns)
+  jj <- match(continent, unique(gapminder_data$continent))
+  for(year in unique(gapminder_data$year)){ # for every year (as rows)
+    ii <- match(year, unique(gapminder_data$year))
+    mean_by_cont[ii, jj] <- mean(gapminder_data[gapminder_data$continent == continent & gapminder_data$year == year,]$lifeExp)
+  }
+}
+colnames(mean_by_cont) <- unique(gapminder_data$continent)
+rownames(mean_by_cont) <- unique(gapminder_data$year)
+mean_by_cont 
+barplot(mean_by_cont, beside=TRUE, ylab = "mean Life Expectancy", xlab = "Continents 1952-2007")
+```
+
+### Writing and Using Functions
+
+You can _create_ your own functions. Compared to a loop this has several advantages:
+
+- you can reuse this function later in your own scripts
+- you can perform only the inputs that you need (not all combinations in a loop)
+- you can add more inputs
+- you can share these in package to reuse to apply in other analyses (please _document_ what they do and what inputs they need)
+- it is easier to read code broken down into smaller functions for each task
+- functions are efficient for memory (not cpu-time) as they call all steps at once and return only the outputs needed to the environment (see: variable scoping)
+- functions make _debugging_ easier as you only need to fix the function to run the correct analysis again
+
+Some people recommend to _write a function every time you need to do something more than ONCE_. You should if you are going to use it more than 3-5 times. R supports both _functional programming_ and _object-oriented programming_. You do not need a deep understanding of these concepts to use functions in your code.
+
+Functions: _perform an operation on an INPUT and RETURN and OUTPUT_
+
+We can create and call a function to perform the mean for a continent as follows.
+
+```{r}
+continent_mean <- function(continent){
+  mean(gapminder_data[gapminder_data$continent == continent & gapminder_data$year == "2002",]$lifeExp)
+}
+continent_mean("Africa")
+```
+
+Note that this requires an input to run:
+
+```{r, warning=TRUE, error=TRUE}
+continent_mean()
+```
+
+The _default_ continent can be given as follows. Other inputs can be given. The function will _revert_ to the default argument if no other input is specified (just like built-in R commands).
+
+```{r}
+continent_mean <- function(continent = "Europe"){
+  mean(gapminder_data[gapminder_data$continent == continent & gapminder_data$year == "2002",]$lifeExp)
+}
+continent_mean("Africa")
+continent_mean() #Europe is default
+```
+
+Notice that the above function can run on ANY continent but will only compute values for the year 2002 in the gapminder dataset. This is because the function is _hardcoded_. This is *not recommended*. You will need to write a new function if you want to compute a different. To _avoid_ this you can define another argument in a function to pass these into the function so it can compute any dataset (in this format):
+
+```{r}
+continent_mean <- function(data, continent = "Europe"){
+  mean(data[data$continent == continent & data$year == "2002",]$lifeExp)
+}
+continent_mean(gapminder_data, "Africa") # compatible with other datasets (not "harcoded")
+continent_mean(gapminder_data) #Europe is default for "continent
+```
+
+A function can take as many inputs as required (but only one output object). We can add the year as follows:
+
+```{r}
+continent_mean <- function(data, continent = "Europe", year = 2002){
+  mean(data[data$continent == continent & data$year == year,]$lifeExp)
+}
+continent_mean(gapminder_data) #Europe 2002 is default
+continent_mean(gapminder_data, year = "1972", continent = "Asia") #Europe 2002 is default
+```
+
+Now we can run our function on different inputs instead of copying the code:
+
+```{r}
+continent_mean(gapminder_data, year = "1972", continent = "Asia") #Europe 2002 is default
+continent_mean(gapminder_data, year = "1972", continent = "Africa") #Europe 2002 is default
+continent_mean(gapminder_data, year = "1972", continent = "Americas") #Europe 2002 is default
+```
+
+#### Functions and Loops can be combined
+
+Let's do our nested LOOP again with this function:
+
+```{r}
+continent_mean(gapminder_data, year = "1972", continent = "Asia")
+```
+
+```{r}
+mean_by_cont <- matrix(NA, length(unique(gapminder_data$year)), length(unique(gapminder_data$continent)))
+for(continent in unique(gapminder_data$continent)){
+  jj <- match(continent, unique(gapminder_data$continent))
+  for(year in unique(gapminder_data$year)){
+    ii <- match(year, unique(gapminder_data$year))
+    mean_by_cont[ii, jj] <- continent_mean(gapminder_data, continent, year)
+  }
+}
+colnames(mean_by_cont) <- unique(gapminder_data$continent)
+rownames(mean_by_cont) <- unique(gapminder_data$year)
+mean_by_cont 
+```
+
+#### Applying functions to a list or matrix
+
+We can also "apply" functions to a list or matrix. This is an effective way to perform an operation each element of a list or vector. Similar to _vectorised_ commands, applying a function can perform more complex operations. This is recommended in R for running existing functions on each on a list. 
+
+Apply: _perform a FUNCTION on EACH element of a LIST_ or _perform a FUNCTION on each row/column of a MATRIX_
+
+```{r}
+#apply to a list
+numbers <- list(1:10, c(0,4,6,2,8))
+numbers
+max(numbers[[1]])
+lapply(numbers, max)
+sapply(numbers, max)
+```
+
+Similarly, an apply function can be used to run a function on a row (1) or column (2) of a matrix or data frame. For example, we can compute the GDP for each row (each country and year) with the following function. We can create functions within the apply call.
+
+```{r}
+#apply to a matrix/data.frame (e.g., for every country)
+gdp <- apply(gapminder_data, 1, function(x) as.numeric(x[[6]]) * as.numeric(x[[3]]))
+gapminder_data$gdp <- gdp
+head(gapminder_data)
+```
+
+We can also apply functions to columns, including subsets of the data (the function will be performed on _every_ column given so make sure types are suitable). Arguments can be passed to the function after the function input or by defining a function as shown:
+
+```{r}
+#apply to a matrix columns
+apply(gapminder_data[grep("2002", gapminder_data$year),c(3, 5, 6)], 2, sum, na.rm = TRUE)
+apply(gapminder_data[grep("2002", gapminder_data$year),c(3, 5, 6)], 2, function(x) sum(x, na.rm = TRUE))
+```
+
+Using this approach, we can compute a list or vector of means for each continent (equivalent to the FOR loop).
+
+```{r}
+lapply(unique(gapminder_data$continent), function(continent){
+  continent_mean(gapminder_data, continent, year = "2002")
+  })
+```
+
+```{r}
+sapply(unique(gapminder_data$continent), function(continent){
+  continent_mean(gapminder_data, continent, year = "2002")
+})
+```
+
+### Parallel computing
+
+We can use the "snow" (Simple Network Of Workstations) package to run functions in _parallel_. This uses a similar process as the "apply" functions. Let's start with a simple example of an apply function and run ir again in parallel.
+
+In this case, we do not need to wait for each result to compute the next one. This is called _embarrassingly parallel_ computing. This is the best situation for setting up a parallel computation:
+
+- independent processes do need rely on the output of other processes (no communication between cores needed)
+- the operations are complex and computationally intensive (time to set up cluster is justified)
+
+
+```{r}
+lapply(1:10, function(ii) ii^2)
+```
+
+Parallel Apply: _perform a FUNCTION on EACH input in PARALLEL_
+
+```{r}
+library("snow") # simple network of workstations
+cl <- makeCluster(3)
+cl
+parLapply(cl, 1:10, function(ii) ii^2)
+```
+
+What "makeCluster" does is set up the cluster (group of cores) to send the jobs to. The function will be run on each core separately (at the same time) and each output returned as an element. Above we are running this function on 3 cores. This sets up a _multithreaded_ process to run 3 threads. 3 inputs will run at the same time. The rest will wait until one of the cores is available to do the next one.
+
+Using "makeCluster" it will default to the suitable type for your system. It is recommended to use a Socket Cluster ("makeSOCKcluster) as this can run on any cluster including separate nodes or local machines. On some systems and MPI cluster ("makeMPIcluster") is recommended to reduce load on communication but this is only compatible with some hardware systems and requires "OpenMP" C library and "Rmpi" to be installed (this _is not needed_ for a local machine). Contact the administrators or support for servers and HPC systems for recommendations to optimise code on their system.
+
+Note that these operations **do not** necessarily occur in the _order_ (but results are returned in order of inputs). The code below shows the order that the code is running. You **cannot assume** that the ouput from earlier inputs will be completed for later computations. This is possible but is more complex than and _embarassingly parallel_ system.
+
+```{r}
+system("rm outs.txt")
+system("touch outs.txt")
+```
+
+```{r}
+library("snow") 
+cl <- makeCluster(3)
+cl
+parLapply(cl, 1:10, function(ii){
+  print(ii)
+  write.table(ii^2, "outs.txt", append = TRUE)
+  return(ii^2)
+  })
+system("cat outs.txt")
+
+```
+
+Note that more cores is not always faster. The theoretical _speed up_ will be less if you add more cores as it takes more resources to set up the server (overhead time) and communication between cores. Embarrassingly parallel is ideal for this since communiation is _only_ needed to send input and outputs to the main core. "stopCluster" should be called before exiting R or creating another cluster.
+
+```{r}
+# note more cores is not always faster (Amdahl's law) due to set up time and core-to-core communication
+
+system.time({
+  library("snow") # simple network of workstations
+  cl <- makeCluster(1)
+  cl
+  out <- parLapply(cl, 1:1000, function(ii) ii^2)
+})
+stopCluster(cl)
+```
+
+```{r}
+system.time({
+library("snow") # simple network of workstations
+cl <- makeCluster(3)
+cl
+out <- parLapply(cl, 1:1000, function(ii) ii^2)
+})
+stopCluster(cl)
+```
+
+```{r}
+system.time({
+  library("snow") # simple network of workstations
+  cl <- makeCluster(10) # more than on machine
+  cl
+  out <- parLapply(cl, 1:1000, function(ii) ii^2)
+})
+stopCluster(cl)
+```
+
+Here we compare the performance of computing the mean for each continent  in an "apply" function and in "parallel". The important point is to give the cluster to the parallel function on which to run. The cores must also have the objects exported to them. Each core has it's own environment. You must use "clusterExport" to pass input data to the cores. You can use `clusterExport(cl, ls())` to pass all objects in the environment. Any changes to objects (by each core) in each function call on each input will not affect the others (variable scoping). 
+
+```{r}
+system.time({
+lapply(unique(gapminder_data$continent), function(continent){
+  continent_mean(gapminder_data, continent, year = "2002")
+})
+})
+```
+
+```{r}
+system.time({
+  library("snow") # simple network of workstations
+  cl <- makeCluster(3) # more than on machine
+  cl
+  clusterExport(cl, list("gapminder_data", "continent_mean")) # export data to other cores (can be "ls()")
+  parLapply(cl, unique(gapminder_data$continent), function(continent){
+    continent_mean(gapminder_data, continent, year = "2002")
+  })
+  stopCluster(cl)
+})
+#slower due to sending data to each core
+```
+
+Setting up parallel computing is better for more complex tasks. For example, if we have a computation that takes a longer time, the parallel process runs faster than the sequential process. It is not worth setting up a cluster unless you have a computationally intensive task that justifies the time to set up.
+
+Make a sequential process slower:
+
+- a large number of iterations to run
+- a complex process that takes a long time for each iteration to run
+
+Make a parallel process slower:
+
+- a large data object to export to each core
+- high volumes of communication between cores
+- high usage of resources divided between cores (memory or file I/O)
+
+
+```{r}
+system.time({
+  lapply(unique(gapminder_data$continent), function(continent){
+    Sys.sleep(0.5)
+    continent_mean(gapminder_data, continent, year = "2002")
+  })
+})
+```
+
+```{r}
+system.time({
+  library("snow") # simple network of workstations
+  cl <- makeCluster(3) # more than on machine
+  cl
+  clusterExport(cl, list("gapminder_data", "continent_mean"))
+  parLapply(cl, unique(gapminder_data$continent), function(continent){
+    Sys.sleep(0.5) # computational intensice step runs separately on each core
+    continent_mean(gapminder_data, continent, year = "2002")
+  })
+})
+```
+
+## Remotes
+
+The process to develop _parallel_ R codes to run on a local machine (multicores) or a remote system (cluster, server, or HPC system) is the same. You need to ensure that the R code can access the input data on a remote system but the functions developed can be run on remote systems with more cores available.
