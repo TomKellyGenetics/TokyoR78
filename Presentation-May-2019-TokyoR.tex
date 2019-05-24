@@ -1,0 +1,1771 @@
+\documentclass{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{default}
+
+\hypersetup{pdfstartview={Fit}}
+\usepackage{siunitx} % use of \times 10 - X format
+\usepackage{colortbl, xcolor}
+\usepackage[dvips]{color}
+\usepackage[first=0,last=9]{lcg}
+\usepackage{hyperref}
+\hypersetup{
+    bookmarks=true,         % show bookmarks bar?
+    unicode=false,          % non-Latin characters in Acrobat’s bookmarks
+    pdftoolbar=true,        % show Acrobat’s toolbar?
+    pdfmenubar=true,        % show Acrobat’s menu?
+    pdffitwindow=false,     % window fit to page when opened
+    pdfstartview={FitH},    % fits the width of the page to the window
+    pdftitle={My title},    % title
+    pdfauthor={Author},     % author
+    pdfsubject={Subject},   % subject of the document
+    pdfcreator={Creator},   % creator of the document
+    pdfproducer={Producer}, % producer of the document
+    pdfkeywords={keyword1, key2, key3}, % list of keywords
+    pdfnewwindow=true,      % links in new PDF window
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=red,          % color of internal links (change box color with linkbordercolor)
+    citecolor=green,        % color of links to bibliography
+    filecolor=magenta,      % color of file links
+    urlcolor=blue           % color of external links
+}
+%\usepackage{animate}
+\usepackage{adjustbox}
+
+\definecolor{Black}{rgb}{1, 1, 1}
+
+\definecolor{Set1}{rgb}{1, 0.9411765, 0.9411765}
+\definecolor{Set2}{rgb}{0.9411765,0.9411765, 1}
+\definecolor{Intersect}{rgb}{0.9411765, 0.8862745, 0.9411765}
+
+\definecolor{Cluster_Blue}{rgb}{0, 0, 1}
+\definecolor{Cluster_Green}{rgb}{0, 1, 0}
+\definecolor{Cluster_Orange}{rgb}{1, 0.6470588, 0}
+\definecolor{Cluster_Red}{rgb}{1, 0, 0}
+
+\definecolor{LightGrey}{rgb}{0.9, 0.9, 0.9}
+
+%enable fixed column size tables
+\usepackage{array}
+\newcolumntype{H}{>{\setbox0=\hbox\bgroup\cellcolor{white}}c<{\egroup}@{}}
+\usepackage{ragged2e}
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\usepackage{multirow}
+
+\usepackage[iso]{datetime2}
+
+\usepackage{CJKutf8}
+
+\setbeamertemplate{frametitle}[default][center]
+\setbeamertemplate{caption}{\raggedright\insertcaption\par}
+%\setbeamertemplate{framesubtitle}[default][center]
+
+\begin{document}
+\begin{frame}
+    \frametitle{Making your code faster:   \\
+    \begin{CJK}{UTF8}{min}コードを早く実行させている\end{CJK}}
+    \framesubtitle{Introduction to vectorisation and parallel computing \\
+    \begin{CJK}{UTF8}{min}ベクトル化と並列計算の紹介する\end{CJK}}
+    \begin{center}
+    \texttt{\#}TokyoR 78\textsuperscript{\small{th}} Meeting \\
+    \changeformat{2019-05-25} \\
+      %\changeformat{\today} \\
+      \bigskip
+      \resizebox{!}{0.25 \textheight}{
+	\includegraphics{RIKEN_logo.png}
+      }   
+    \end{center}
+    \newline
+    \begin{center}
+        \textbf{Tom Kelly} \\
+        \small{
+      Postdoctoral Researcher \\
+      %Epigenome Technology Exploration Unit, %\\
+      %Division of Genomic Medicine \\
+      RIKEN Centre for Integrative Medical Sciences, %\\
+      Yokohama%, Japan
+      }
+    \end{center}        
+    \\
+     \begin{center}
+     \begin{CJK}{UTF8}{min}
+      \textbf{ケリー・トム} \\
+      \small{
+      ポスドクで 研究者 \\
+      %エピゲノム技術開発ユニット、 %\\ 
+      %Division of Genomic Medicine \\
+      国立研究開発法人理化学研究所の生命医科学研究センター、 %\\
+      横浜%、日本
+      }
+      \end{CJK}
+    \end{center}    
+    
+    \end{frame}
+  \begin{frame}
+    \frametitle{ \begin{CJK}{UTF8}{min}自己紹介\end{CJK}}
+    \framesubtitle{ \begin{CJK}{UTF8}{min}ケリー・トム\end{CJK}}
+     \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} % each column can also be its own environment  
+  
+       \begin{CJK}{UTF8}{min}
+     \begin{itemize}
+     
+     \item 名前はトム
+      \bigskip
+     \item 苗字はケリー
+      \bigskip
+	\item ニュージーランドから来た
+      \bigskip
+     \item 二十七歳
+      \bigskip
+	\item 妻の出身は東北
+	\bigskip
+	\item 一年半ぐらい日本に住んでいた\\ (宮城県と神奈川県)
+     \end{itemize}
+      \end{CJK}
+     
+     \end{column}
+     \begin{column}[T]{4cm} 
+      \vskip-3cm
+      \begin{center}
+      \resizebox{0.75 \columnwidth}{!}{
+	\includegraphics{Otago_Uni.jpg}
+      }
+     
+     \smallskip     
+     
+      \resizebox{0.75 \columnwidth}{!}{
+	\includegraphics{pohutu-geyser.jpg}
+      }
+     
+      \smallskip     
+     
+      \resizebox{0.75  \columnwidth}{!}{
+	\includegraphics{milford-sound.jpg}
+      }
+     
+      \footnotesize{
+      
+
+      Twitter: \texttt{@}tomkXY
+      
+      \smallskip
+
+       GitHub:TomKellyGenetics  
+       }
+    \end{center}
+    
+     \end{column}
+     \end{columns}
+  
+  \end{frame}
+  \begin{frame}
+    \frametitle{ \begin{CJK}{UTF8}{min}自己紹介\end{CJK}}
+    \framesubtitle{ \begin{CJK}{UTF8}{min}ケリー・トム\end{CJK}}
+     \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} % each column can also be its own environment  
+  
+       \begin{CJK}{UTF8}{min}
+     \begin{itemize}
+	\item 専攻は遺伝学と数学
+      \bigskip
+     \item バイオインフォマティクスの研究者 
+     
+     \bigskip
+     \item 主に統計解析を行う
+     
+      \bigskip
+     \item オタゴ大学で博士号を取った
+      \bigskip
+     \item 横浜で理化学研究所でポスドク     
+     
+     \bigskip
+     \item R言語を７年間ぐらい使っている
+     \end{itemize}
+      \end{CJK}
+     
+     \end{column}
+     \begin{column}[T]{4cm} 
+      \vskip-3cm
+      \begin{center}
+      \resizebox{0.75 \columnwidth}{!}{
+	\includegraphics{Otago_Uni.jpg}
+      }
+     
+     \smallskip     
+     
+      \resizebox{0.75 \columnwidth}{!}{
+	\includegraphics{pohutu-geyser.jpg}
+      }
+     
+      \smallskip     
+     
+      \resizebox{0.75  \columnwidth}{!}{
+	\includegraphics{milford-sound.jpg}
+      }
+     
+      \footnotesize{
+      
+
+      Twitter: \texttt{@}tomkXY
+      
+      \smallskip
+
+       GitHub:TomKellyGenetics  
+       }
+    \end{center}
+    
+     \end{column}
+     \end{columns}
+  
+  \end{frame}
+   \begin{frame}
+    \frametitle{ R is too slow}
+    \framesubtitle{ \begin{CJK}{UTF8}{min}R言語は遅いすぎる\end{CJK}}
+    \resizebox{!}{0.66 \textheight}{
+\centered{ \includegraphics{computer_guy.png}}
+     }
+      \end{frame}
+    \begin{frame}
+    \frametitle{ R is too slow}
+    \framesubtitle{ \begin{CJK}{UTF8}{min}R言語は遅いすぎる\end{CJK}}
+  
+  How to make your code Faster
+  
+      
+     \begin{itemize}
+    \item Develop automated complex tasks with \textit{Loops} and then optimise code (Loops are slow)    
+           \bigskip
+           
+	\item Create your own \textit{functions} to automate tasks (remove human-error)
+      \bigskip
+      
+     \item Use built-in \textit{vectorised} and apply functions to process vectors, matrices, and lists more efficiently
+     
+     \bigskip
+     \item Pass functions to other languages (e.g., use C++ with Rcpp)
+     
+      \bigskip
+     \item Run independent tasks in \textit{parallel}
+     
+      \bigskip
+     \item Use remote servers, clusters, and high-performance computing (HPC)     
+     
+     \end{itemize}
+      \end{frame}
+      \begin{frame}
+    \frametitle{Key point}
+      
+Running a task with multiple inputs
+
+\begin{CJK}{UTF8}{min}ダメです\end{CJK}
+     
+     \begin{itemize}
+    \item  Don't copy-paste!  (introduce human errors)
+    
+    \item Only use loops when needed
+    
+    \item Avoid "premature optimisation" (code first, speed up later)
+    
+    \end{itemize}
+    
+    \begin{CJK}{UTF8}{min}オケです\end{CJK}
+    \begin{itemize}
+    
+    \item Write a function when you need to do something more than once 
+     \begin{itemize}
+       \item run a function with different inputs
+       \item share functions in packages
+       \end{itemize}
+       
+       \item evaluate in all elements at once
+     \begin{itemize}
+       \item vectorised functions
+       \item the "apply" functions (and \texttt{plyr} package) 
+       \end{itemize}
+       
+       \item \textit{parallel} computing with \texttt{snow} package
+     \begin{itemize}
+       \item set up dependent nodes (SOCKS/openmpi)
+       \item  export input objects to cluster
+       \item run function in parallel (non-sequential) as multiple "threads"
+       \end{itemize}
+     
+     \end{itemize}
+      \end{frame}
+      
+       \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{Demonstration}\\
+   \LARGE{\begin{CJK}{UTF8}{min}デモ\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}  
+  
+      \begin{frame}
+    \frametitle{ Parallel Computing in R}
+    \framesubtitle{Take home messages}
+  
+  How to make your code Faster
+  
+      
+     \begin{itemize}
+    \item Identify "bottleneck" points and optimise only this code
+    \bigskip
+    
+   \item Concepts in parallel computing can be applied to other package or languages languages (e.g., \texttt{dopar}, GNU parallel)
+    \bigskip
+           
+	\item Embarrassingly parallel processes \textit{do not} run in order
+      \bigskip
+      
+     \item Parallel computing is \textit{not always} faster (due to cluster set up "overheads" and communication)
+     
+     \end{itemize}
+     
+     Demonstration  codes will be released on GitHub as a Rmarkdown document: \texttt{TomKellyGenetics\/TokyoR78}
+      \end{frame}
+           \begin{frame}
+    \frametitle{ Automating tasks in R}
+  
+  How to run functions at the same time
+  
+      
+     \begin{itemize}
+    \item  Running R in the background
+     
+       \begin{itemize}
+       \item  RStudio jobs pane
+      \item  running as a script (nohup)
+      \item  pass arguments to script: \texttt{commandargs()} in R, \texttt{"\$@"} in bash
+      \end{itemize}
+
+     \item Submit jobs to a server
+     
+     "The Cloud is just someone else's computer"
+     
+       \begin{itemize}
+       \item  Run on a local server or remote cluster (ssh)
+      \item   Move input data to server (rsync or scp)
+      \item   Make sure dependancies (packages) are installed
+      \item   Queue jobs to the server with a scheduler
+      \begin{itemize}
+      \item LoadLeveler: llq, llsubmit, llcancel
+       \item  Slurm: squeue, srun, scancel
+        \item SGE:   qstat, qsub, qdel 
+        \end{itemize}
+      
+      \item Run parallel scripts
+      \item Dependancy jobs (run after other jobs have finished)
+
+      \end{itemize}
+     \end{itemize}
+     
+     See StackOverflow answer for more details
+      \end{frame}
+      
+            \begin{frame}
+            \begin{center}
+            
+            \resizebox{!}{0.9 \textheight}{      
+	\includegraphics{Stack_Question.png}
+      }
+            \end{center}
+      
+      \small \url{https://stackoverflow.com/questions/31137842/run-multiple-r-scripts-simultaneously/41920899#41920899}
+              \end{frame}
+           
+            \begin{frame}
+    \frametitle{ Running R on remote systems}
+    \framesubtitle{Take home messages}
+  
+  How to make your code Faster
+      
+     \begin{itemize}
+    \item  Ask about servers/clusters available and take opportunity to learn use them
+    \bigskip
+    
+   \item Be careful of "pre-mature optimisation"
+    \bigskip
+    
+   \item Automate tasks to save you work and perform reproducible analysis
+    \bigskip
+    
+   \item Run small "test" jobs to check it will run without errors
+    \bigskip
+    
+   \item Order of executing tasks is important
+    \bigskip
+    
+   \item CPU-hours cost money (but not as much as human-hours)
+   
+     
+     \end{itemize}
+     
+     Demonstration  codes will be released on GitHub as a Rmarkdown document
+      \end{frame}
+  \iffalse
+  \begin{frame}
+  \frametitle{Do you know about New Zealand? \\
+  \begin{CJK}{UTF8}{min}ニュージーランドについて知っている？\end{CJK}}  
+  
+  \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{4cm} %
+
+   \begin{center}
+      \resizebox{0.75 \columnwidth}{!}{      
+	\includegraphics{Flag_of_New_Zealand.png}
+      }
+      
+      \bigskip
+      
+        
+      \resizebox{0.6 \columnwidth}{!}{      
+	\includegraphics{Silver_Fern_Real.png}
+      }
+      
+      \bigskip
+      
+      
+      \resizebox{0.75 \columnwidth}{!}{      
+	\includegraphics{Silver_Fern_Flag.png}
+      }
+       \end{center}
+     \end{column}
+         \begin{column}[T]{4cm} %
+     \begin{center}
+
+      \resizebox{0.75 \columnwidth}{!}{
+	\includegraphics{Maori_Flag.png}
+      }
+      
+      \bigskip
+      
+        
+      \resizebox{0.6 \columnwidth}{!}{      
+	\includegraphics{Koru_Real.png}
+      }
+      
+      \bigskip
+      
+      
+      \resizebox{0.75 \columnwidth}{!}{      
+	\includegraphics{AirNZ_Plane.png}
+      }
+       \end{center}
+      \end{column}
+         \begin{column}[T]{4cm} %    
+      \begin{center}
+      \resizebox{0.75  \columnwidth}{!}{
+	\includegraphics{Red_Peak.png}
+      }
+      
+      \bigskip
+      
+        
+      \resizebox{0.6 \columnwidth}{!}{      
+	\includegraphics{Mitre_Peak.png}
+      }
+      
+      \bigskip
+      
+        
+      \resizebox{0.75 \columnwidth}{!}{      
+	\includegraphics{All_Blacks.png}
+      }
+    \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \end{frame}
+  \begin{frame}
+  \frametitle{In New Zealand we have many cultures \\
+  \begin{CJK}{UTF8}{min}ニュージーランドでいろいろい文化がある\end{CJK}}  
+  
+  \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{4cm} %
+
+   \begin{center}
+   New Zealand European \\
+\begin{CJK}{UTF8}{min}ニュージーランドの \\ ユーロパ人\end{CJK}   \\
+P\={a}keh\={a} \\
+(\begin{CJK}{UTF8}{min}外国人\end{CJK})
+
+\bigskip
+
+      \resizebox{0.75 \columnwidth}{!}{      
+	\includegraphics{Profile.png}
+      }
+       \end{center}
+     \end{column}
+         \begin{column}[T]{4cm} %
+     \begin{center}
+        New Zealand M\={a}ori \\
+\begin{CJK}{UTF8}{min}ニュージーランドの \\ マオリ人\end{CJK}    \\
+M\={a}ori; T\={a}ngata Whenua (\begin{CJK}{UTF8}{min}先住民; 土地の人々\end{CJK}) \\
+
+\bigskip
+
+      \resizebox{0.75 \columnwidth}{!}{
+	\includegraphics{Maori.pdf}
+      }
+       \end{center}
+      \end{column}
+         \begin{column}[T]{4cm} %    
+      \begin{center}
+      Hobbits \\
+\begin{CJK}{UTF8}{min}ホビット\end{CJK}   \\
+From Middle Earth \\
+ (\begin{CJK}{UTF8}{min}中っ国人;シャイア人\end{CJK}) \\
+ \begin{CJK}{UTF8}{min}ロードオブザリング\end{CJK}
+
+ 
+\bigskip
+
+ 
+      \resizebox{0.75  \columnwidth}{!}{
+	\includegraphics{Frodo_Ending.png}
+      }
+    \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \end{frame}
+  \begin{frame}
+  \frametitle{We are all "Kiwi"\\
+  \begin{CJK}{UTF8}{min}全部ニュージーランド人は「キウィ」\end{CJK}}  
+  
+  \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{5cm} %
+
+   \begin{center}
+   Kiwi 
+\begin{CJK}{UTF8}{min}キウィ\end{CJK}   \\
+
+\smallskip
+
+      \resizebox{0.6 \columnwidth}{!}{      
+	\includegraphics{Profile.png}
+      }
+      
+      \bigskip
+      
+      Kiwifruit
+\begin{CJK}{UTF8}{min}キウィフルーツ\end{CJK}   \\
+
+\smallskip
+
+      \resizebox{0.6 \columnwidth}{!}{      
+	\includegraphics{Kiwifruit.jpg}
+      }
+       \end{center}
+     \end{column}
+         \begin{column}[T]{5cm} %
+     \begin{center}
+        Kiwi 
+\begin{CJK}{UTF8}{min}キウィ\end{CJK}   \\
+
+\smallskip
+
+      \resizebox{0.6 \columnwidth}{!}{
+	\includegraphics{Maori.pdf}
+      }
+      
+      \bigskip
+      
+      Kiwi 
+\begin{CJK}{UTF8}{min}キウィ鳥\end{CJK}   \\
+
+\smallskip
+
+      \resizebox{0.6 \columnwidth}{!}{      
+	\includegraphics{meet-kiwi.jpg}
+      }
+      \end{center}
+      \end{column}
+     \end{columns}  
+  
+  \end{frame}
+   \begin{frame}
+   
+   \begin{center}
+   
+   \large{T\={e}n\={a} koutou, t\={e}n\={a} koutou, t\={e}n\={a} koutou katoa }\\
+   \bigskip
+   \large{Hello guests, hello everyone, hello spirits looking down upon us}\\   
+   \bigskip
+   \large{\begin{CJK}{UTF8}{min}皆さん、初めまして、よろしくお願いします。\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}
+ \begin{frame}
+  \frametitle{M\={a}ori Culture and Language \\
+  \begin{CJK}{UTF8}{min}マオリ文化とマオリ語\end{CJK}}  
+  
+  \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{9cm} %
+  \small{
+
+      T\={e}n\={a} koutou, t\={e}n\={a} koutou, t\={e}n\={a} koutou katoa  \\ Greetings friends, family, guests, and ancestors/spirits   \\ \begin{CJK}{UTF8}{min}皆さん、初めまして、よろしくお願いします。\end{CJK}
+      \bigskip
+       
+    \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{4cm} %     
+  Kia Ora (Hello) \\ \begin{CJK}{UTF8}{min}こんにちは\end{CJK}
+      \bigskip
+      
+Kia Kaha (Be strong) \\ \begin{CJK}{UTF8}{min}頑張って！\end{CJK}
+      \bigskip
+   
+Koha (Gift) \\ \begin{CJK}{UTF8}{min}おみやげ\end{CJK}
+      \bigskip
+   
+Mana (Reputation) \\ \begin{CJK}{UTF8}{min}心や気\end{CJK}
+      \bigskip
+   
+Taku h\={e} (Sorry) \\ \begin{CJK}{UTF8}{min}すみません\end{CJK}
+      
+       \end{column}
+        \begin{column}[T]{4cm}
+   
+Haere mai! (Welcome) \\ \begin{CJK}{UTF8}{min}ようこそ\end{CJK}
+      \bigskip
+   
+Whanau (Family) \\ \begin{CJK}{UTF8}{min}家\end{CJK}
+      \bigskip
+   
+Aroha (Love) \\ \begin{CJK}{UTF8}{min}愛\end{CJK}
+      \bigskip
+   
+Ka kite ano (See you) \\ \begin{CJK}{UTF8}{min}またね！\end{CJK}
+      \bigskip
+   
+  Nga mihi (Thank you) \\ \begin{CJK}{UTF8}{min}どうもありがとう\end{CJK}
+
+   \end{column}
+   \end{columns}
+}
+       \end{column} 
+       \begin{column}[T]{3cm} %
+      
+       %\vskip2m
+\begin{center}
+      \resizebox{1 \columnwidth}{!}{
+	\includegraphics{Maori.pdf}
+      }   
+      
+      \bigskip
+      
+      \resizebox{1 \columnwidth}{!}{
+	\includegraphics{Maui.jpg}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \end{frame}
+
+   \begin{frame}
+   
+   \begin{center}
+   
+   \Large{He aha te mea nui o te ao? }\\
+   \Large{He t\={a}ngata,  he t\={a}ngata, he t\={a}ngata.}\\
+   
+   \textcolor{white}{
+  \bigskip   
+   \Large{What is the most important thing in the world?}\\   
+   \Large{It is people, it is people, it is people.}\\
+   
+\bigskip   
+   
+   \Large{\begin{CJK}{UTF8}{min}\textcolor{white}{世界で一番重要なことは何ですか？}\end{CJK}}\\
+   \Large{\begin{CJK}{UTF8}{min}\textcolor{white}{人々だし、人々だし、人々です。}\end{CJK}}
+   }
+   \end{center}
+
+  \end{frame}  
+  
+   \begin{frame}
+   
+   \begin{center}
+   
+   \Large{He aha te mea nui o te ao? }\\
+   \Large{He t\={a}ngata,  he t\={a}ngata, he t\={a}ngata.}\\
+   
+   
+  \bigskip   
+   \Large{What is the most important thing in the world?}\\   
+   \textcolor{white}{
+   \Large{It is people, it is people, it is people.}\\
+   }
+   
+\bigskip   
+   
+   \Large{\begin{CJK}{UTF8}{min}世界で一番重要なことは何ですか？\end{CJK}}\\
+   \Large{\begin{CJK}{UTF8}{min}\textcolor{white}{人々だし、人々だし、人々です。}\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}  
+     \begin{frame}
+   
+   \begin{center}
+   
+   \Large{He aha te mea nui o te ao? }\\
+   \Large{He t\={a}ngata,  he t\={a}ngata, he t\={a}ngata.}\\
+   
+   
+  \bigskip   
+   \Large{What is the most important thing in the world?}\\   
+   \Large{It is people, it is people, it is people.}\\
+   
+\bigskip   
+   
+   \Large{\begin{CJK}{UTF8}{min}世界で一番重要なことは何ですか？\end{CJK}}\\
+   \Large{\begin{CJK}{UTF8}{min}人々だし、人々だし、人々です。\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}  
+  
+  \begin{frame}
+  \frametitle{Why would you learn R? \\
+  \begin{CJK}{UTF8}{min}どうしてR言語を学びたい？\end{CJK}}  
+  
+  \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{6cm} %
+
+       \begin{itemize}
+  \item Free and open-source \\ \begin{CJK}{UTF8}{min}無料とオープンソース\end{CJK}
+      \smallskip
+   
+   \item Global user community \\ \begin{CJK}{UTF8}{min}国際ユーザコミュニティ\end{CJK}
+      \smallskip
+   
+   \item A huge ecosystem of packages \\ \begin{CJK}{UTF8}{min}多くのパッケージがある\end{CJK}
+      \smallskip
+   
+   \item Reproducible research \\ \begin{CJK}{UTF8}{min}再現可能な研究\end{CJK}
+   \end{itemize}
+       \end{column} 
+       \begin{column}[T]{6cm} %
+      
+       %\vskip2m
+\begin{center}
+      \resizebox{0.66 \columnwidth}{!}{
+	\includegraphics{R_Logo.jpg}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \end{frame}
+  \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{What is the best way to learn?}\\
+   \LARGE{\begin{CJK}{UTF8}{min}学ぶのに一番良い方法は何？\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}
+  \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{Teaching}\\
+   \LARGE{\begin{CJK}{UTF8}{min}教える事\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}
+  \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{Practice on your own}\\
+   \LARGE{\begin{CJK}{UTF8}{min}自分で練習する\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}  
+    \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{Get colleagues and the community to help}\\
+   \LARGE{\begin{CJK}{UTF8}{min}同僚やコミュニティーを支援\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}
+    \begin{frame}
+
+   \frametitle{What is the best way to learn? \\
+   \begin{CJK}{UTF8}{min}学ぶのに一番良い方法は何？\end{CJK}}
+   
+   \begin{center}
+   
+   
+\bigskip
+   
+   \LARGE{Teaching}\\
+   \LARGE{\begin{CJK}{UTF8}{min}教える事\end{CJK}}
+   
+\bigskip
+   
+   \LARGE{Practice on your own}\\
+   \LARGE{\begin{CJK}{UTF8}{min}自分で練習する\end{CJK}}
+
+\bigskip
+   
+   \LARGE{Get colleagues and the community to help}\\
+   \LARGE{\begin{CJK}{UTF8}{min}同僚やコミュニティーを支援\end{CJK}}
+   
+   \end{center}
+
+  \end{frame}
+  \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{What is ``Software Carpentry''?}\\
+   \LARGE{\begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」は何ですか？\end{CJK}}
+   
+   
+   \begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+   \end{center}
+
+  \end{frame}
+  
+   \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{What is ``Software Carpentry''?}\\
+   \LARGE{\begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」は何ですか？\end{CJK}}
+   
+   
+   \begin{center}
+      \resizebox{0.75 \columnwidth}{!}{
+	\includegraphics{ToolKit.png}
+      }   
+  \end{center}
+   \end{center}
+
+  \end{frame}
+  \fi
+    \begin{frame}
+  \frametitle{What is ``Software Carpentry''? \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」は何ですか？\end{CJK}}  
+  
+  \vskip-2cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \begin{itemize}
+  \item A non-profit foundation based in the USA \\ \begin{CJK}{UTF8}{min}アメリカにある非営利団体 \end{CJK}
+      \smallskip
+   
+   \item A collection of collaboratively maintained lessons\\ \begin{CJK}{UTF8}{min}協働でレッスンを維持\end{CJK}
+      \smallskip
+   
+   \item A 2-3 day series of hands-on workshops on tools for researchers \\ \begin{CJK}{UTF8}{min}研究者向けツールのハンズオン(体験型)ワークショップを2・3日間で教える\end{CJK}
+      \smallskip
+   
+   \item A global community of instructors and member organisations \\ \begin{CJK}{UTF8}{min}指導者とメンバーからなる組織の国際的なコミュニティー\end{CJK}
+   
+  
+  \end{itemize}
+  
+  \end{frame}
+  \iffalse
+\begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBaz2015Team.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+ \begin{frame}
+  \frametitle{``Software Carpentry'' workshops \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」のワークショップ\end{CJK}}  
+  
+  \vskip-1.5cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \begin{itemize}
+  \item Open to anyone \\ \begin{CJK}{UTF8}{min}誰でも参加できる\end{CJK}
+      \smallskip
+   
+   \item Free or small charge for catering/venue \\ \begin{CJK}{UTF8}{min}無料か少額\end{CJK}
+      \smallskip
+   
+   \item Survey for before and after lessons \\ \begin{CJK}{UTF8}{min}レッソの前後にでインケートがある\end{CJK}
+      \smallskip
+   
+   \item Feedback is important to improve lessons\\ \begin{CJK}{UTF8}{min}改善のためのフィードバックは重要です \end{CJK}
+        \smallskip
+   
+   \item Held all over the world \\ \begin{CJK}{UTF8}{min}世界中でたくさんイベントがある\end{CJK}
+  
+  \end{itemize}
+  
+  \end{frame}
+ \begin{frame}
+ 
+ \begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{SWC_Instructors_Map}
+      }   
+      
+       Software Carpentry Instructors \\ \begin{CJK}{UTF8}{min}ソフトウェア・カーペントリーのインストラクター\end{CJK}
+  \end{center}
+ 
+\end{frame}  
+
+  \begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBazDun2.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+\fi
+ \begin{frame}
+  \frametitle{What is``Software Carpentry''\\
+  \begin{CJK}{UTF8}{min}ソフトウェア・カーペントリー」は何ですか\end{CJK}}  
+  
+  \vskip-1.5cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+  Organisations want to build research capacity \\ \begin{CJK}{UTF8}{min}組織は研究能力を構築したい\end{CJK}  
+  
+  \begin{itemize}
+  \item Consulting doesn't scale \\ \begin{CJK}{UTF8}{min}コンサルティングはスケールができない\end{CJK}
+      \smallskip
+   
+   \item Tech support can't help with all research tools \\ \begin{CJK}{UTF8}{min}技術サポートは全部の研究ツールを手伝えない\end{CJK}
+      \smallskip
+   
+   \item You get frustrated and isolated in online courses (MOOCs) \\ \begin{CJK}{UTF8}{min}オンラインコースでイライラして孤独になる\end{CJK}
+
+  \end{itemize}
+  
+  We aim to build a community and peer support \\ \begin{CJK}{UTF8}{min}コミュニティとピアサポートを構築することを目指している\end{CJK}
+  
+  \end{frame}
+  \iffalse
+\begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBaz_Lesson.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+  \begin{frame}
+  \frametitle{``Software Carpentry'' lessons \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」のレッスン\end{CJK}}  
+  
+  \vskip-0.5cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+      \vskip-1cm
+  
+  \begin{itemize}
+  \item Fun and social \\ \begin{CJK}{UTF8}{min}楽しく、気さく\end{CJK}
+      \smallskip
+   
+   \item Busy and intense \\ \begin{CJK}{UTF8}{min}忙しく、賑やかで、活気がある\end{CJK}
+      \smallskip
+   
+   \item An introduction to programming and and best practices \\ \begin{CJK}{UTF8}{min}プログラミングとベスト・プラクティスへの入門\end{CJK}
+      \smallskip
+   
+   \item An introduction help systems and open source community \\ \begin{CJK}{UTF8}{min}ヘルプ・システムやオープン・ソースの入門\end{CJK}
+      \smallskip
+   
+   \item A networking opportunity \\ \begin{CJK}{UTF8}{min}ネットワーキングの機会\end{CJK}
+        \smallskip
+   
+   \item Open, supportive, and safe for all \\ \begin{CJK}{UTF8}{min}皆さんにとって、オープンで、サポート的で、安全\end{CJK}
+   
+  
+  \end{itemize}
+  
+  \end{frame}
+\begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBazSticky.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+   \begin{frame}
+  \frametitle{``Software Carpentry'' lessons \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」のレッスン\end{CJK}}  
+  
+    \vskip-1cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+      %\vskip-1cm
+  
+  \begin{itemize}
+  \item Instructor leads each session\\ \begin{CJK}{UTF8}{min}インストラクターがそれぞれの入門をレーダーする\end{CJK}
+      \smallskip
+      
+  \item Introduce each topic \\ \begin{CJK}{UTF8}{min}それぞれのトピックを紹介する \end{CJK}
+      \smallskip
+   
+   \item Demonstrations and live-coding \\ \begin{CJK}{UTF8}{min}デモとライブ・コーディング\end{CJK}
+      \smallskip
+   
+   \item Interactive with quiz, exercises and group work  \\ \begin{CJK}{UTF8}{min}そこでクイズやエクササイズやグループ・ワークがあるから、とてもインタラクティブです\end{CJK}
+      
+  \end{itemize}
+  
+  \end{frame}
+
+    \begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBazSticky3.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+  
+   \begin{frame}
+  \frametitle{``Software Carpentry'' lessons \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」のレッスン\end{CJK}}  
+  
+    \vskip-2cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+      %\vskip-1cm
+  
+  \begin{itemize}
+   \item Helpers to give one-on-one assistance, answer questions, and fix technical problems \\ \begin{CJK}{UTF8}{min}ヘルパーは１：１で手伝う\end{CJK}
+        \smallskip
+   
+   \item Feedback encouraged for organisers and instructors to improve \begin{CJK}{UTF8}{min}オーガナイザーやインストラクターの方々にフィードバックを促す\end{CJK}
+           \smallskip
+   
+   \item Lessons notes to review or continue after the event \\ \begin{CJK}{UTF8}{min}レッスンノートはイベント後にネットで利用可能です\end{CJK}
+  
+  \end{itemize}
+  
+  \end{frame}
+    \begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBazSticky2.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+    \begin{frame}
+  \frametitle{``Software Carpentry'' Team \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」のチーム\end{CJK}}  
+  
+  
+  Instructor (\begin{CJK}{UTF8}{min}インストラクター\end{CJK})
+  \begin{itemize}
+  \item Instructor leads each session to introduce each topic \\ \begin{CJK}{UTF8}{min}インストラクターは、各トピックの説明を各セッションで行う\end{CJK}
+     % \smallskip
+   
+   %\item Demonstrations and live-coding \\ \begin{CJK}{UTF8}{min}デモとライブ・コーディング\end{CJK}
+   \end{itemize}
+      \bigskip
+      
+    Helper  (\begin{CJK}{UTF8}{min}ヘルパー\end{CJK})
+  \begin{itemize}
+   \item Assist with exercises  \\ \begin{CJK}{UTF8}{min}エクササイズを手伝う\end{CJK}
+      %\smallskip
+   
+   \item Fix technical errors and install problems \\ \begin{CJK}{UTF8}{min}インストールとエラーを修理する\end{CJK}
+  
+  \end{itemize}
+  
+  \begin{center}
+      \resizebox{0.25 \columnwidth}{!}{
+	\includegraphics{stitch_proud.png}
+      }   
+      
+      Nobody gets left behind \\ \begin{CJK}{UTF8}{min}誰も後に残っていない\end{CJK}
+  \end{center}
+  
+  \end{frame}
+      \begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBaz_Team.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+  \begin{frame}
+  \frametitle{Who goes to ``Software Carpentry'' lessons? \\
+  \begin{CJK}{UTF8}{min}誰が「ソフトウェア・カーペントリー」に行く？\end{CJK}}  
+  
+  \vskip-1cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \begin{itemize}
+  \item Researchers of any career stage \\ \begin{CJK}{UTF8}{min}様々なキャリアの研究者\end{CJK}
+      \smallskip
+   
+  
+  \item Researchers in any research field\\ \begin{CJK}{UTF8}{min}様々な分野研究者\end{CJK}
+      \smallskip
+   
+   \item No programming experience needed \\ \begin{CJK}{UTF8}{min}プログラミング経験は不要\end{CJK}
+      \smallskip
+   
+   \item Women and minorities welcome \\ \begin{CJK}{UTF8}{min}女性とマイノリティは大歓迎\end{CJK}
+      \smallskip
+   
+   \item Students or staff \\ \begin{CJK}{UTF8}{min}大学院生や研究員や会社員\end{CJK}
+   
+  
+  \end{itemize}
+  
+  \end{frame}
+    \begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBaz_Lesson3.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+  \begin{frame}
+  \frametitle{What does``Software Carpentry'' teach? \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」で何を教える事？\end{CJK}}  
+  
+  \vskip-1cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+       \vskip-1cm
+       
+     A core set of tools to do research well \\ \begin{CJK}{UTF8}{min} よく研究するためのツールの中核\end{CJK}
+    
+  \begin{itemize}
+  \item Automation (Bash) \\ \begin{CJK}{UTF8}{min}オートメーション\end{CJK}
+      \smallskip
+   
+   \item Programming (R or Python) \\ \begin{CJK}{UTF8}{min}プログラミング\end{CJK}
+      \smallskip
+   
+   \item Version Control (Git) \\ \begin{CJK}{UTF8}{min}バージョン管理\end{CJK}
+      \smallskip
+   
+   \item Reproducible research \\ \begin{CJK}{UTF8}{min}再現可能な研究\end{CJK}
+   
+  \end{itemize}
+  
+       Each lesson is to understand programming concepts \\ \begin{CJK}{UTF8}{min} プログラミングの概念を分かるようになる\end{CJK}
+  
+  \end{frame}
+      \begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBaz_Lesson2.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+
+  \begin{frame}
+  \frametitle{What are ``best practices'' for scientific computing? \\
+  \begin{CJK}{UTF8}{min}科学計算の 「ベストプラクティス」とは何？\end{CJK}}  
+  
+  \vskip-1cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+     
+     Things to aspire to  \begin{CJK}{UTF8}{min} 目指すもの\end{CJK}
+     
+     \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{6cm} %
+     
+  \begin{itemize}
+\item Code for Humans (Comment) \\ \begin{CJK}{UTF8}{min} 人間ためのコードを書く\end{CJK}
+\smallskip  
+  
+  \item Record history (commit often) \\ \begin{CJK}{UTF8}{min}履歴の記録(コミット)\end{CJK}
+      \smallskip
+   
+   \item Avoid repetition \\ \begin{CJK}{UTF8}{min}反復の回避\end{CJK}
+      \smallskip
+   
+   \item Anticipate mistakes (testing) \\ \begin{CJK}{UTF8}{min}間違いを予測(テストする)\end{CJK}
+      \smallskip
+   
+   \item Reproducible research \\ \begin{CJK}{UTF8}{min}再現可能なワークフロー\end{CJK}
+   
+  \end{itemize}
+  \end{column} \begin{column}[T]{6cm} %
+    
+  \begin{itemize}
+  \item Avoid premature optimisation \\ \begin{CJK}{UTF8}{min}早すぎる最適化の回避\end{CJK}
+      \smallskip
+   
+   \item Collaborate (with GitHub) \\ \begin{CJK}{UTF8}{min}コラボレーション\end{CJK}
+      \smallskip
+   
+   \item Share and review code \\ \begin{CJK}{UTF8}{min}コードの共有とレビュー\end{CJK}
+      \smallskip
+   
+   \item Use the help systems \\ \begin{CJK}{UTF8}{min}ヘルプシステムの使用\end{CJK}
+      \smallskip
+   
+   \item Clean (``tidy'') data \\ \begin{CJK}{UTF8}{min}データの整理\end{CJK}
+   
+  \end{itemize}  
+  
+   \end{column}
+     \end{columns}  
+  \end{frame}
+  
+  \begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBaz_Exercise.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+
+  \begin{frame}
+  
+  \frametitle{Who are``Software Carpentry'' instructors? \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」の先生は誰？\end{CJK}}  
+  
+  \vskip-1cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \begin{itemize}
+  \item Volunteers \\ \begin{CJK}{UTF8}{min}ボランティア\end{CJK}
+      \smallskip
+   
+   \item Trained instructors \\ \begin{CJK}{UTF8}{min}訓練を受けたインストラクター\end{CJK}
+      \smallskip
+   
+   \item People passionate about good research \\ \begin{CJK}{UTF8}{min}良い研究に情熱をもつ人々\end{CJK}
+      \smallskip
+   
+   \item Experts in many different fields \\ \begin{CJK}{UTF8}{min}さまざまな分野の専門家\end{CJK}
+      \smallskip
+   
+   \item From all over the world \\ \begin{CJK}{UTF8}{min}世界中から
+\end{CJK}
+   
+  \end{itemize}
+  
+  \end{frame}
+  
+\begin{frame}
+
+\begin{center}
+      \resizebox{0.9 \columnwidth}{!}{
+	\includegraphics{ResBaz2015Team.jpg}
+      }   
+  \end{center}
+
+\end{frame}
+  
+  \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{What is in it for me?}\\
+   \LARGE{\begin{CJK}{UTF8}{min}利点は何ですか？\end{CJK}}
+   
+   
+   \begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+   \end{center}
+
+  \end{frame}
+  \begin{frame}
+  
+  \frametitle{Benefits for ``Software Carpentry'' instructors \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」の利点\end{CJK}}  
+  
+  \vskip-1cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+  \begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{6cm} %
+  \begin{itemize}
+  \item Free training \\ \begin{CJK}{UTF8}{min}無料トレーニング\end{CJK}
+      \smallskip
+   
+   \item Networking \\ \begin{CJK}{UTF8}{min}ネットワーキング\end{CJK}
+      \smallskip
+   
+   \item Travel opportunities \\ \begin{CJK}{UTF8}{min}旅行の機会\end{CJK}
+      \smallskip
+   
+   \item Career development and support \\ \begin{CJK}{UTF8}{min}キャリア開発とサポート\end{CJK}
+      \smallskip
+   
+   \item Develop ``soft skills'' \\ \begin{CJK}{UTF8}{min}「ソフトスキル」を開発する
+\end{CJK}
+   
+  \end{itemize}
+  \end{column} \begin{column}[T]{6cm} %
+    \begin{itemize}
+  \item Good experience (enjoyable) \\ \begin{CJK}{UTF8}{min}良い経験（楽しい）\end{CJK}
+      \smallskip
+   
+   \item Help colleagues \\ \begin{CJK}{UTF8}{min}同僚を手伝う\end{CJK}
+      \smallskip
+   
+   \item Contribute to good cause %(donate time)
+    \\ \begin{CJK}{UTF8}{min}良い原因に貢献する\end{CJK}
+      \smallskip
+   
+   \item Learn from other instructors \\ \begin{CJK}{UTF8}{min}他のインストラクターから\\ 学ぶ\end{CJK}
+      \smallskip
+   
+   \item Part of a global community \\ \begin{CJK}{UTF8}{min}世界中でコミュニティー
+\end{CJK}
+   
+  \end{itemize}
+    \end{column}
+     \end{columns}  
+  
+  \end{frame}
+    \begin{frame}
+  
+  \frametitle{Benefits for ``Software Carpentry'' instructors \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」の利点\end{CJK}}  
+  
+  \vskip-1cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+``Selfish reasons''    \\ \begin{CJK}{UTF8}{min}利己的な理由\end{CJK}
+  
+  \begin{itemize}
+  \item Find jobs in future \\ \begin{CJK}{UTF8}{min}将来の仕事探し\end{CJK}
+      \smallskip
+   
+   \item Less questions to answer from colleagues \\ \begin{CJK}{UTF8}{min}同僚からの質問が減る\end{CJK}
+      \smallskip
+   
+   \item Events are fun (and there's free food) \\ \begin{CJK}{UTF8}{min}イベントは楽しい（無料食べ物）\end{CJK}
+      \smallskip
+   
+   \item Practice for public speaking or teaching \\ \begin{CJK}{UTF8}{min}人の前で話す経験や、教えることの練習 \end{CJK}
+   
+  \end{itemize}
+  
+  \end{frame}
+      \begin{frame}
+  
+  \frametitle{Benefits for ``Software Carpentry'' instructors \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」の利点\end{CJK}}  
+  
+  \vskip-1cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  
+Because of Software Carpentry I am:   \\ \begin{CJK}{UTF8}{min}ソフトウェア・カーペントリーから、私は：\end{CJK}
+  
+  \begin{itemize}
+  \item A better programmer \\ \begin{CJK}{UTF8}{min}プログラミングがより上手になる\end{CJK}
+      \smallskip
+   
+   \item A better teacher\\ \begin{CJK}{UTF8}{min}教えることがより上手になる\end{CJK}
+      \smallskip
+   
+   \item A better public speaker \\ \begin{CJK}{UTF8}{min}人の前で話すことがより上手になる\end{CJK}
+      \smallskip
+   
+   \item Better at teamwork \\ \begin{CJK}{UTF8}{min}チームワークがより上手になる\end{CJK}
+      \smallskip
+   
+   \item Better at organising events \\ \begin{CJK}{UTF8}{min}イベントの開催がより上手になる\end{CJK}
+   
+  \end{itemize}
+  
+  \end{frame}
+  
+  \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{Can we bring it to Japan?}\\
+   \LARGE{\begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」は日本で出来る？\end{CJK}}
+   
+   
+   \begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+   \end{center}
+
+  \end{frame}
+   \begin{frame}
+
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{we_want_you.jpg}
+      }   
+      
+      \Large{We want you} \\ \begin{CJK}{UTF8}{min}\Large{我々は君が欲しい}\end{CJK}
+  \end{center}
+
+\end{frame}
+  \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{How do I get involved?}\\
+   \LARGE{\begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」にどのように参加しますか？\end{CJK}}
+   
+   \begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+   \end{center}
+
+  \end{frame}
+  \begin{frame}
+
+ \begin{center}
+ \resizebox{0.25 \textwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      } 
+\\    \texttt{\#}swcarpentry \texttt{@}swcarpentry   
+\bigskip
+      
+ \resizebox{0.25 \textwidth}{!}{
+	\includegraphics{data-carpentry.png}
+      }  
+      \\ \texttt{@}datacarpentry   
+\bigskip
+       
+       
+       \resizebox{0.33 \textwidth}{!}{
+	\includegraphics{TheCarpentries-opengraph.png}
+      }    
+      
+       \\ \texttt{@}thecarpentries   
+ \end{center}
+  
+\end{frame}    
+\fi
+  \begin{frame}
+  
+  \frametitle{Please join ``Software Carpentry''  \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」参加してください\end{CJK}}  
+  
+  \vskip-0.5cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  \vskip-1cm  
+  
+  \begin{itemize}
+  \item To join the organisation \\ \begin{CJK}{UTF8}{min}組織に参加するには\end{CJK}
+  
+  \url{https://carpentries.org/join/}
+      \smallskip
+      
+   \begin{itemize}
+ \item GitHub
+ 
+ \url{https://github.com/swcarpentry}
+      \smallskip
+   
+   \item Mailing list (Topicbox) \begin{CJK}{UTF8}{min}メール\end{CJK}
+   
+   \url{https://carpentries.topicbox.com}
+  %\smallskip
+   
+   %\item Newsletter \begin{CJK}{UTF8}{min}ニュースレター\end{CJK}
+   \end{itemize}
+
+   \item To become an instructor (online or in-person training) \\ \begin{CJK}{UTF8}{min}インストラクターになるには(ネットでか人で)\end{CJK}
+   
+   \url{https://carpentries.org/become-instructor/}
+      \smallskip
+   
+   \item To help with the Japanese translations (contact me) \\ \begin{CJK}{UTF8}{min}日本語の翻訳を手伝うには(私に連絡)\end{CJK}
+   
+   \url{https://github.com/TomKellyGenetics} \url{tom.kelly@riken.jp} \texttt{@}tomkXY
+   
+  \end{itemize}
+  
+  \end{frame}
+
+  \begin{frame}
+   
+   \begin{center}
+   
+   \LARGE{What would we need to do this?}\\
+   \LARGE{\begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」をするには何が必要ですか？\end{CJK}}
+   
+   
+   \begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+   \end{center}
+
+  \end{frame}
+  
+    \begin{frame}
+  
+  \frametitle{Please join ``Software Carpentry''  \\
+  \begin{CJK}{UTF8}{min}「ソフトウェア・カーペントリー」参加してください\end{CJK}}  
+  
+  \vskip-0.5cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{0.5 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+  \vskip-1cm  
+  
+  \begin{itemize}
+  \item Japanese translation of the lessons \\ \begin{CJK}{UTF8}{min}レッスンを日本語に翻訳する\end{CJK}
+  
+  demo: \url{https://tomkellygenetics.github.io/git-novice/ja/index/index.html}
+      \smallskip
+      
+   \begin{itemize}
+ \item Team to translate core lessons \\ \begin{CJK}{UTF8}{min}コアレッスンを翻訳するチーム
+\end{CJK}
+      \smallskip
+   
+   \item Maintainers to keep it up to date \\ \begin{CJK}{UTF8}{min}メンテナは最新の状態に保つ\end{CJK}
+   \end{itemize}
+
+   \item Instructors in Japan (who speak Japanese) \\ \begin{CJK}{UTF8}{min}日本でインストラクター(英語や日本語を話せる) \end{CJK}
+      \smallskip
+   
+   \item Support from institutions \\ \begin{CJK}{UTF8}{min}学会からのサポート \end{CJK}
+      \smallskip
+   
+   \item Then we can plan a workshop or conference \\ \begin{CJK}{UTF8}{min}そして、ワークショップや会議を計画できる \end{CJK}
+   
+   \end{itemize}
+  
+  \end{frame}
+  \begin{frame}
+   
+\vskip1cm   
+   
+   \begin{center}
+   
+   \large{Please consider to volunteer}\\
+   \Large{\begin{CJK}{UTF8}{min}やってみたいかたはいませんか？\end{CJK}}
+   
+   Contact: \url{tom.kelly@riken.jp} Twitter: \texttt{@}tomkXY GitHub: TomKellyGenetics
+   
+   \bigskip   
+   
+   \large{Let's do our best for the community}\\
+   \Large{\begin{CJK}{UTF8}{min}コミュニティーのために頑張りましょう！\end{CJK}}
+   
+      \large{Thank you for your attention}\\
+   \Large{\begin{CJK}{UTF8}{min}よろしくお願いいたします\end{CJK}}
+   
+   
+   \begin{center}
+      \resizebox{0.33 \columnwidth}{!}{
+	\includegraphics{software-carpentry.png}
+      }   
+  \end{center}
+   \end{center}
+   
+     \vskip-4cm
+\begin{columns}[T] % contents are top vertically aligned
+  \begin{column}[T]{7.5cm} %
+       \end{column} \begin{column}[T]{4cm} %
+      
+\begin{center}
+      \resizebox{1 \columnwidth}{!}{
+	\includegraphics{Doraemon.pdf}
+      }   
+  \end{center}
+       \end{column}
+     \end{columns}  
+
+  \end{frame}
+    
+ \end{document}
